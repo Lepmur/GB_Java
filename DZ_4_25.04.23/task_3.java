@@ -1,83 +1,82 @@
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.Stack;
 
 public class task_3 {
-
-    static Stack<String> operationsHistory = new Stack<>();
-
-    static void logOperation(double num1, double num2, char op, double result) {
-        String logMsg = String.format("%.2f %c %.2f = %.2f", num1, op, num2, result);
-        try {
-            FileWriter writer = new FileWriter("log.txt", true);
-            writer.write(logMsg + "\n");
-            writer.close();
-            operationsHistory.push(logMsg);
-        } catch (IOException e) {
-            System.out.println("Ошибка записи в файл.");
-            e.printStackTrace();
-        }
-    }
-
-    static double executeOperation(char op, double num1, double num2) {
-        double result = 0;
-        switch (op) {
-            case '+':
-                result = num1 + num2;
-                break;
-            case '-':
-                result = num1 - num2;
-                break;
-            case '*':
-                result = num1 * num2;
-                break;
-            case '/':
-                result = num1 / num2;
-                break;
-            default:
-                System.out.println("Оператор введён неверно!");
-                break;
-        }
-        return result;
-    }
+    private static Stack<Double> resultStack;
 
     public static void main(String[] args) {
+        resultStack = new Stack<>();
         Scanner input = new Scanner(System.in);
-        double num1 = 0, num2 = 0, result = 0;
+        double num1, num2, result = 0.0;
         char op;
-        boolean continueCalculations = true;
+        boolean hasResult = false;
 
-        while (continueCalculations) {
-            System.out.print("Введите первое число: ");
-            num1 = input.nextDouble();
-            System.out.print("Введите операцию (+, -, *, /) или 'c' для отмены последней операции: ");
-            op = input.next().charAt(0);
+        while (true) {
+            if (hasResult) {
+                System.out.print("Введите операцию (+, -, *, /, u для отмены): ");
+                op = input.next().charAt(0);
 
-            if (op == 'c') {
-                if (operationsHistory.isEmpty()) {
-                    System.out.println("Нет операций для отмены.");
+                if (op == 'u') {
+                    if (!resultStack.isEmpty()) {
+                        result = resultStack.pop();
+                        System.out.println("Отмена операции. Предыдущий результат: " + result);
+                    } else {
+                        System.out.println("Нет доступной операции для отмены.");
+                    }
+                    continue;
+                }
+
+                System.out.print("Введите следующее число: ");
+                if (input.hasNextDouble()) {
+                    num1 = result;
+                    num2 = input.nextDouble();
+
+                    switch (op) {
+                        case '+':
+                            result = num1 + num2;
+                            break;
+                        case '-':
+                            result = num1 - num2;
+                            break;
+                        case '*':
+                            result = num1 * num2;
+                            break;
+                        case '/':
+                            if (num2 != 0) {
+                                result = num1 / num2;
+                            } else {
+                                System.out.println("Ошибка: деление на ноль!");
+                                continue;
+                            }
+                            break;
+                        default:
+                            System.out.println("Оператор введен неверно!");
+                            continue;
+                    }
+
+                    System.out.println("Результат: " + result);
+                    resultStack.push(result);
+                    hasResult = true;
                 } else {
-                    String lastOperation = operationsHistory.pop();
-                    String[] operands = lastOperation.split(" ");
-                    num1 = Double.parseDouble(operands[0]);
-                    op = operands[1].charAt(0);
-                    num2 = Double.parseDouble(operands[2]);
-                    result = Double.parseDouble(operands[4]);
-                    System.out.println("Отменено: " + lastOperation);
+                    System.out.println("Неверный формат числа. Попробуйте снова.");
+                    input.next();
                 }
             } else {
-                System.out.print("Введите второе число: ");
-                num2 = input.nextDouble();
-                result = executeOperation(op, num1, num2);
-                logOperation(num1, num2, op, result);
-                System.out.println("Результат: " + result);
+                System.out.print("Введите первое число (или 'q' для выхода): ");
+                if (input.hasNextDouble()) {
+                    num1 = input.nextDouble();
+                    hasResult = true;
+                    result = num1;
+                } else if (input.hasNext("q")) {
+                    System.out.println("Выход из программы.");
+                    break;
+                } else {
+                    System.out.println("Неверный формат числа. Попробуйте снова.");
+                    input.next();
+                }
             }
-
-            System.out.print("Хотите продолжить вычисления? (y/n): ");
-            String continueStr = input.next();
-            continueCalculations = continueStr.equals("y");
         }
+
         input.close();
     }
 }
